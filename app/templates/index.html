@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <title>WebP Canvas Player</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.0.7/dist/full.css" rel="stylesheet" />
+</head>
+<body class="min-h-screen bg-base-200 text-base-content flex flex-col items-center p-4" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+
+  <!-- ✅ 一番上にタイトル -->
+  <h1 class="text-3xl font-bold text-center mb-6">WebP Canvas Player</h1>
+
+  <div class="w-full max-w-6xl flex flex-col gap-6">
+
+    <!-- ファイルアップロード + 保存チェック -->
+    <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+      <input type="file" id="fileInput" accept=".webp" class="file-input file-input-bordered w-full max-w-md" />
+
+      <label class="label cursor-pointer gap-2">
+        <span class="label-text">フレームを保存する</span>
+        <input type="checkbox" id="saveCheckbox" class="toggle toggle-sm" />
+      </label>
+    </div>
+
+    <!-- メイン表示：canvas + コントロール横並びを2分割 -->
+    <div class="flex gap-6 justify-center w-full">
+      <!-- 🎥 canvas：左側 50%に固定 -->
+      <div class="w-1/2 flex justify-end">
+        <div class="border border-base-content rounded">
+          <canvas id="canvas" class="rounded w-auto h-auto max-h-[80vh]" style="max-width: 100%; height: auto;"></canvas>
+        </div>
+      </div>
+
+      <!-- 🎛 コントロールパネル：右側 50%に固定 -->
+      <div class="w-1/2 flex flex-col gap-4">
+        <!-- ▶ ⏸ ⏮ ⏭ -->
+        <div class="flex gap-2 flex-wrap">
+          <button onclick="play()" class="btn btn-success btn-sm">▶ 再生</button>
+          <button onclick="pause()" class="btn btn-error btn-sm">⏸ 停止</button>
+          <button onclick="prevFrame()" class="btn btn-info btn-sm">⏮ 前</button>
+          <button onclick="nextFrame()" class="btn btn-info btn-sm">⏭ 次</button>
+          <button onclick="resetFrame()" class="btn btn-warning btn-sm">🔁 最初</button>
+        </div>
+
+        <!-- 再生スピード -->
+        <div class="flex flex-col gap-1">
+  <label for="speedRange" class="label-text">Speed: <span id="speedDisplay">1.00x</span></label>
+  <input type="range" id="speedRange" min="0.25" max="4" step="0.01" value="1"
+         class="range range-accent range-xs" />
+</div>
+
+        <!-- シークバー -->
+        <div class="flex flex-col gap-2">
+          <input type="range" id="seekbar" min="0" max="0" value="0"
+                 class="range range-primary h-2" />
+          <div class="text-sm text-center opacity-70" id="frameInfo">Frame 0 / 0</div>
+        </div>
+
+        <!-- オプション -->
+        <div class="flex items-center justify-between">
+          <label class="label cursor-pointer gap-2">
+            <span class="label-text">ループ</span>
+            <input type="checkbox" id="loopToggle" class="toggle toggle-sm" />
+          </label>
+
+          <button onclick="toggleFullscreen()" class="btn btn-sm btn-outline">⛶ フルスクリーン</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function handleDrop(event) {
+      event.preventDefault();
+      const file = event.dataTransfer.files[0];
+      if (!file) return;
+      document.getElementById("fileInput").files = event.dataTransfer.files;
+      document.getElementById("fileInput").dispatchEvent(new Event("change"));
+    }
+  </script>
+  <script src="/static/script.js"></script>
+<script>
+  document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+
+    if (e.code === "Space") {
+      e.preventDefault();
+      if (playing) pause();
+      else play();
+    } else if (e.code === "ArrowLeft") {
+      prevFrame();
+    } else if (e.code === "ArrowRight") {
+      nextFrame();
+    }
+  });
+</script>
+</body>
+</html>
