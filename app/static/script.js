@@ -1,4 +1,4 @@
-// 🎞 script.js（再生特化 改良版 + スライダー対応）
+// 🎞 script.js（再生特化 改良版 + スライダー対応 + WebM保存機能）
 
 let frames = [];
 let currentFrame = 0;
@@ -15,6 +15,7 @@ const speedRange = document.getElementById("speedRange");
 const speedDisplay = document.getElementById("speedDisplay");
 const frameInfo = document.getElementById("frameInfo");
 const loopToggle = document.getElementById("loopToggle");
+const saveProgress = document.getElementById("saveProgress");
 
 fileInput.addEventListener("change", async () => {
   const file = fileInput.files[0];
@@ -85,9 +86,9 @@ function updateCanvas() {
 }
 
 function resetFrame() {
-    currentFrame = 0;
-    updateCanvas();
-  }
+  currentFrame = 0;
+  updateCanvas();
+}
 
 function updatePlayback() {
   const speed = parseFloat(speedRange.value);
@@ -154,17 +155,46 @@ canvas.addEventListener("wheel", (e) => {
 });
 
 document.addEventListener("keydown", (e) => {
-    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
-  
-    if (e.code === "Space") {
-      e.preventDefault();
-      if (playing) pause();
-      else play();
-    } else if (e.code === "ArrowLeft") {
-      prevFrame();
-    } else if (e.code === "ArrowRight") {
-      nextFrame();
-    } else if (e.code === "Home") {
-      resetFrame();
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+
+  if (e.code === "Space") {
+    e.preventDefault();
+    if (playing) pause();
+    else play();
+  } else if (e.code === "ArrowLeft") {
+    prevFrame();
+  } else if (e.code === "ArrowRight") {
+    nextFrame();
+  } else if (e.code === "Home") {
+    resetFrame();
+  }
+});
+
+async function saveAsWebM() {
+  if (frames.length === 0) return;
+
+  const speed = parseFloat(speedRange.value);
+  const fps = 24 * speed;
+  const capturer = new CCapture({ format: 'webm', framerate: fps });
+
+  let index = 0;
+  capturer.start();
+
+  function renderFrame() {
+    if (index >= frames.length) {
+      capturer.stop();
+      capturer.save();
+      saveProgress.textContent = "保存完了";
+      return;
     }
-  });
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(frames[index], 0, 0, canvas.width, canvas.height);
+    capturer.capture(canvas);
+
+    saveProgress.textContent = `保存中... (${index + 1} / ${frames.length})`;
+    index++;
+    setTimeout(renderFrame, 1000 / fps);
+  }
+
+  renderFrame();
+}
